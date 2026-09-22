@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 import { TOOLS, PRESETS, callTool, getOutput, API_BASE, API_KEY } from '../data/tools.js'
 
 async function checkObfuscator(signal) {
@@ -87,6 +88,14 @@ export default function Tool() {
         </div>
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
+        <AnimatePresence mode="wait">
+        <motion.div
+          key={tool.id}
+          initial={{ opacity: 0, x: 56 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -56 }}
+          transition={{ duration: 0.22, ease: 'easeOut' }}
+        >
         <div className="glass-panel" style={{ borderRadius: 24, padding: 24 }}>
           <h2 style={{ fontSize: 32, fontWeight: 900 }}>{tool.name}</h2>
           <p style={{ color: '#9ca3af', fontSize: 14, margin: '6px 0' }}>{tool.description}</p>
@@ -126,8 +135,10 @@ export default function Tool() {
           </button>
           {error && <div style={{ marginTop: 12, background: 'rgba(127,29,29,0.4)', border: '1px solid rgba(239,68,68,0.4)', padding: 12, borderRadius: 14, fontSize: 13 }}>{error}</div>}
         </div>
+        </motion.div>
+        </AnimatePresence>
         {result && (
-          <div className="card" style={{ marginTop: 16, padding: 20, borderColor: 'rgba(52,211,153,0.4)' }}>
+          <div className="card glow-emerald" style={{ marginTop: 16, padding: 20, borderColor: 'rgba(52,211,153,0.4)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
               <div><span style={{ color: '#34d399' }}>●</span> <b>{tool.name} Output</b> <span className="mono" style={{ fontSize: 11, color: '#34d399' }}>Execution Successful</span></div>
               <div style={{ display: 'flex', gap: 8 }}>
