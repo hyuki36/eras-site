@@ -10,10 +10,9 @@ export default function Layout({ children }) {
     <div style={{ position: 'relative', minHeight: '100vh' }}>
       <div className="video-bg"><img src={VIDEO_BG} alt="" /></div>
       <div className="video-overlay" />
-      <div className="grid-fade" style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0 }} />
       <nav className="nav">
         <div className="nav-inner">
-          <Link to="/" style={{ fontWeight: 900, fontSize: 20, letterSpacing: -0.5, display: 'flex', alignItems: 'center', gap: 10 }}><img src={TOP_ICON} alt="Eras" style={{ width: 32, height: 32, borderRadius: 10, objectFit: 'cover', border: '1px solid rgba(255,255,255,0.2)' }} />Eras<span style={{ color: 'rgba(255,255,255,0.4)' }}>D</span></Link>
+          <Link to="/" style={{ fontWeight: 900, fontSize: 20, letterSpacing: -0.5, display: 'flex', alignItems: 'center', gap: 10 }}><img src={TOP_ICON} alt="Eras" style={{ width: 32, height: 32, borderRadius: 10, objectFit: 'cover', border: '1px solid rgba(255,255,255,0.2)' }} />Eras</Link>
           <div className="nav-links">
             {link('/', 'Home')}
             {link('/tool', 'Tools')}

@@ -9,7 +9,7 @@ export default function Home() {
         <div className="mono" style={{ display: 'inline-block', border: '1px solid rgba(255,255,255,0.15)', padding: '6px 14px', borderRadius: 999, fontSize: 12, color: 'rgba(255,255,255,0.7)' }}>FREE LUA TOOLS</div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, margin: '16px 0' }}>
           <img src={BRAND_ICON} alt="Eras" style={{ width: 72, height: 72, borderRadius: 20, objectFit: 'cover', border: '1px solid rgba(255,255,255,0.2)', boxShadow: '0 10px 40px rgba(0,0,0,0.6)' }} />
-          <h1 style={{ fontSize: 64, fontWeight: 900, letterSpacing: -2, margin: 0 }}>Eras<span style={{ color: 'rgba(255,255,255,0.4)' }}>D</span></h1>
+          <h1 style={{ fontSize: 64, fontWeight: 900, letterSpacing: -2, margin: 0 }}>Eras</h1>
         </div>
         <p style={{ color: 'rgba(255,255,255,0.6)', maxWidth: 560, margin: '0 auto 24px' }}>Deobfuscate & analyze Lua scripts. 15 free tools powered by https://leakd.up.railway.app/</p>
         <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>

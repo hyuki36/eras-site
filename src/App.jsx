@@ -1,6 +1,6 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { useEffect } from 'react'
-import { useLocation } from 'react-router-dom'
+import { AnimatePresence, motion } from 'framer-motion'
 import Layout from './components/Layout.jsx'
 import Home from './pages/Home.jsx'
 import Tool from './pages/Tool.jsx'
@@ -15,19 +15,30 @@ function ScrollTop() {
 }
 
 export default function App() {
+  const { pathname } = useLocation()
   return (
     <Layout>
       <ScrollTop />
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/api" element={<Api />} />
-        <Route path="/tool" element={<Tool />} />
-        <Route path="/updates" element={<Updates />} />
-        <Route path="/update" element={<Navigate to="/updates" replace />} />
-        <Route path="/announcement" element={<Announcement />} />
-        <Route path="/announcements" element={<Navigate to="/announcement" replace />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={pathname}
+          initial={{ opacity: 0, x: 48 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -48 }}
+          transition={{ duration: 0.22, ease: 'easeOut' }}
+        >
+          <Routes location={pathname}>
+            <Route path="/" element={<Home />} />
+            <Route path="/api" element={<Api />} />
+            <Route path="/tool" element={<Tool />} />
+            <Route path="/updates" element={<Updates />} />
+            <Route path="/update" element={<Navigate to="/updates" replace />} />
+            <Route path="/announcement" element={<Announcement />} />
+            <Route path="/announcements" element={<Navigate to="/announcement" replace />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </motion.div>
+      </AnimatePresence>
     </Layout>
   )
 }

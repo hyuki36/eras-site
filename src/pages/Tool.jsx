@@ -1,5 +1,19 @@
 import { useState, useRef, useEffect } from 'react'
-import { TOOLS, PRESETS, callTool, getOutput } from '../data/tools.js'
+import { TOOLS, PRESETS, callTool, getOutput, API_BASE, API_KEY } from '../data/tools.js'
+
+async function checkObfuscator(signal) {
+  const fd = new FormData()
+  fd.append('file', new Blob(['print("ping")'], { type: 'text/plain' }), 'ping.lua')
+  const res = await fetch(`${API_BASE}/obfuscate?preset=RobloxExecutor`, {
+    method: 'POST', headers: { 'X-Api-Key': API_KEY }, body: fd, signal,
+  })
+  const txt = await res.text().catch(() => '')
+  if (/down|maintenance|offline|1-2 days/i.test(txt)) return 'down'
+  if (res.ok) return 'working'
+  // server answered (even 4xx = alive, just rejected ping file) -> treat as working unless it says down
+  if (res.status >= 400 && res.status < 500 && txt) return 'working'
+  return 'down'
+}
 
 export default function Tool() {
   const [tool, setTool] = useState(TOOLS[0])
@@ -12,8 +26,18 @@ export default function Tool() {
   const [cooldown, setCooldown] = useState(0)
   const [copied, setCopied] = useState(false)
   const [drag, setDrag] = useState(false)
+  const [obfStatus, setObfStatus] = useState('checking') // checking | working | down
   const fileRef = useRef(null)
-  const isDown = tool.id === 'obfuscate' || tool.badge === 'Down'
+
+  useEffect(() => {
+    const ctl = new AbortController()
+    const t = setTimeout(() => ctl.abort(), 12000)
+    checkObfuscator(ctl.signal).then(setObfStatus).catch(() => setObfStatus('down')).finally(() => clearTimeout(t))
+    return () => ctl.abort()
+  }, [])
+
+  const obfBadge = obfStatus === 'working' ? 'Working' : obfStatus === 'checking' ? 'Checking' : 'Down'
+  const isDown = tool.id === 'obfuscate' && obfStatus !== 'working'
 
   useEffect(() => {
     if (cooldown <= 0) return
@@ -49,12 +73,17 @@ export default function Tool() {
       <div className="tool-side" style={{ width: 390, flexShrink: 0, position: 'sticky', top: 80 }}>
         <div style={{ fontSize: 12, fontWeight: 800, color: '#9ca3af', marginBottom: 8 }}>TOOLS ({TOOLS.length})</div>
         <div className="tool-grid">
-          {TOOLS.map(t => (
+          {TOOLS.map(t => {
+            const badge = t.id === 'obfuscate' ? obfBadge : t.badge
+            const badgeCls = badge === 'Working' ? '' : badge === 'Down' ? 'badge-down' : 'badge-beta'
+            const badgeStyle = badge === 'Working' ? { background: 'rgba(52,211,153,0.15)', color: '#6ee7b7', borderColor: 'rgba(52,211,153,0.35)' } : undefined
+            return (
             <button key={t.id} onClick={() => pick(t)} className={'tool-btn' + (tool.id === t.id ? ' sel' : '')}>
               <span style={{ flex: 1 }}>{t.name}</span>
-              {(t.badge === 'Beta' || t.badge === 'Down') && <span className={'badge ' + (t.badge === 'Down' ? 'badge-down' : 'badge-beta')}>{t.badge}</span>}
+              {(badge === 'Beta' || badge === 'Down' || badge === 'Working' || badge === 'Checking') && <span className={'badge ' + badgeCls} style={badgeStyle}>{badge}</span>}
             </button>
-          ))}
+            )
+          })}
         </div>
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
@@ -67,11 +96,16 @@ export default function Tool() {
           {tool.id === 'detect' && <div style={{ marginTop: 12, border: '1px solid rgba(245,158,11,0.4)', background: 'rgba(245,158,11,0.1)', padding: 12, borderRadius: 14, fontSize: 13 }}><b>Notice:</b> detector not up to date with newest obfuscators.</div>}
           {tool.id === 'obfuscate' && (
             <div style={{ marginTop: 12 }}>
+              <div style={{ fontSize: 12, fontWeight: 800, color: '#9ca3af', marginBottom: 6 }}>STATUS: <span className="mono" style={{ color: obfStatus === 'working' ? '#6ee7b7' : obfStatus === 'checking' ? '#fcd34d' : '#fca5a5' }}>{obfStatus === 'working' ? 'WORKING (LIVE)' : obfStatus === 'checking' ? 'CHECKING...' : 'DOWN (1-2 DAYS)'}</span></div>
               <div style={{ fontSize: 12, fontWeight: 800, color: '#9ca3af', marginBottom: 6 }}>ENVIRONMENT PRESET</div>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                {PRESETS.map(p => <button key={p.id} onClick={() => setPreset(p)} className="tool-btn sel" style={{ width: 'auto', borderColor: preset.id === p.id ? '#fff' : undefined }}>{p.label}</button>)}
+                {PRESETS.map(p => <button key={p.id} onClick={() => setPreset(p)} disabled={isDown} className="tool-btn sel" style={{ width: 'auto', borderColor: preset.id === p.id ? '#fff' : undefined, opacity: isDown ? 0.4 : 1 }}>{p.label}</button>)}
               </div>
-              <div style={{ marginTop: 12, border: '1px solid rgba(239,68,68,0.4)', background: 'rgba(239,68,68,0.1)', padding: 12, borderRadius: 14, fontSize: 13 }}><b>Obfuscator Down (1-2 Days):</b> offline for updates.</div>
+              {obfStatus === 'working'
+                ? <div style={{ marginTop: 12, border: '1px solid rgba(52,211,153,0.35)', background: 'rgba(52,211,153,0.08)', padding: 12, borderRadius: 14, fontSize: 13 }}><b>Obfuscator Working:</b> API is live, you can execute.</div>
+                : obfStatus === 'checking'
+                ? <div style={{ marginTop: 12, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.04)', padding: 12, borderRadius: 14, fontSize: 13 }}>Checking obfuscator status...</div>
+                : <div style={{ marginTop: 12, border: '1px solid rgba(239,68,68,0.4)', background: 'rgba(239,68,68,0.1)', padding: 12, borderRadius: 14, fontSize: 13 }}><b>Obfuscator Down (1-2 Days):</b> offline for updates.</div>}
             </div>
           )}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 20 }}>
@@ -88,7 +122,7 @@ export default function Tool() {
             </div>
           </div>
           <button onClick={run} disabled={isDown || loading || cooldown > 0 || (!file && !code.trim())} className="btn-white" style={{ marginTop: 16 }}>
-            {isDown ? 'OBFUSCATOR UNDER MAINTENANCE (1-2 DAYS)' : loading ? 'PROCESSING REQUEST...' : cooldown > 0 ? `COOLDOWN ACTIVE (${cooldown}S)` : `EXECUTE ${tool.name.toUpperCase()}`}
+            {tool.id === 'obfuscate' && obfStatus !== 'working' ? (obfStatus === 'checking' ? 'CHECKING STATUS...' : 'OBFUSCATOR UNDER MAINTENANCE (1-2 DAYS)') : loading ? 'PROCESSING REQUEST...' : cooldown > 0 ? `COOLDOWN ACTIVE (${cooldown}S)` : `EXECUTE ${tool.name.toUpperCase()}`}
           </button>
           {error && <div style={{ marginTop: 12, background: 'rgba(127,29,29,0.4)', border: '1px solid rgba(239,68,68,0.4)', padding: 12, borderRadius: 14, fontSize: 13 }}>{error}</div>}
         </div>
